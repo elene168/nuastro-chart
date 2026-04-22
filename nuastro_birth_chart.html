@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuastro Birth Chart</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#111110;--ink-mid:#3A3A38;--ink-soft:#7A7A78;
+  --bg:#FFFFFF;--bg-soft:#F7F7F5;--bg-mid:#EFEFED;
+  --border:#DDDDD8;--gold:#B8963E;--gold-pale:#F5F0E8;
+}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--ink);font-family:'Jost',sans-serif;font-weight:300}
+.page{max-width:1100px;margin:0 auto;padding:40px 32px 80px}
+
+/* Brand */
+.brand{text-align:center;margin-bottom:40px;padding-bottom:32px;border-bottom:.5px solid var(--border)}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:400;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);margin-bottom:3px}
+.brand-sub{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+
+/* Form */
+.form-wrap{max-width:720px;margin:0 auto 52px}
+.form-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;letter-spacing:.02em;margin-bottom:24px;color:var(--ink)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px 24px;margin-bottom:24px}
+.fg{display:flex;flex-direction:column;gap:5px}
+label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft)}
+input{background:var(--bg-soft);border:.5px solid var(--border);padding:9px 12px;font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--ink);outline:none;transition:border-color .18s;border-radius:0}
+input:focus{border-color:var(--ink)}
+.hint{font-size:10px;color:var(--ink-soft);margin-top:2px}
+.btn{width:100%;background:var(--ink);color:var(--bg);border:none;padding:13px;font-family:'Jost',sans-serif;font-size:10px;font-weight:400;letter-spacing:.28em;text-transform:uppercase;cursor:pointer;transition:opacity .18s}
+.btn:hover{opacity:.75}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.loading{text-align:center;padding:16px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);display:none}
+
+/* Results */
+.results{display:none}
+.results.on{display:block}
+.chart-header{text-align:center;margin-bottom:28px}
+.chart-header h2{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:300;letter-spacing:.05em;color:var(--ink)}
+.chart-header .sub{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-top:5px}
+.chart-header .axes{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mid);margin-top:8px;font-weight:400}
+
+/* Chart wheel */
+.chart-wrap{display:flex;justify-content:center;margin-bottom:48px}
+#chart-svg{width:100%;max-width:700px}
+
+/* Section label */
+.sec{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.sec::after{content:'';flex:1;height:.5px;background:var(--border)}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;border:.5px solid var(--border);margin-bottom:52px}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--bg)}
+thead tr{background:var(--ink)}
+thead th{padding:11px 14px;font-size:8px;letter-spacing:.22em;text-transform:uppercase;font-weight:400;text-align:left;color:rgba(255,255,255,.6)}
+thead th.ch{color:rgba(255,255,255,.9)}
+tbody tr{border-bottom:.5px solid var(--border)}
+tbody tr:hover{background:var(--bg-soft)}
+tbody tr:last-child{border-bottom:none}
+td{padding:10px 14px;vertical-align:middle}
+.td-p{display:flex;align-items:center;gap:7px;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:400}
+.pg{font-size:16px;color:var(--ink-mid);width:20px;text-align:center}
+.td-pl{font-size:12px;font-weight:300;white-space:nowrap}
+.sn{color:var(--ink)}
+.dg{color:var(--ink-soft);font-size:11px;margin-left:2px}
+.rx{color:#A03030;font-size:9px;margin-left:3px;font-weight:400}
+.hn{font-size:11px;color:var(--ink-soft);font-weight:400}
+.tr-angle{background:var(--bg-soft)!important}
+.tr-angle .td-p{font-size:11px;letter-spacing:.06em;font-family:'Jost',sans-serif;color:var(--ink-soft)}
+
+/* Note */
+.note{padding:12px 16px;border-left:1.5px solid var(--border);font-size:12px;color:var(--ink-soft);line-height:1.7;margin-bottom:40px}
+.note strong{color:var(--ink);font-weight:400}
+
+@media(max-width:700px){
+  .form-grid{grid-template-columns:1fr 1fr}
+  .page{padding:28px 18px 60px}
+}
+@media(max-width:480px){
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="brand">
+  <div class="brand-name">Nuastro</div>
+  <div class="brand-sub">Real-Sky Birth Chart · IAU Constellation Boundaries · 13 Signs</div>
+</div>
+
+<div class="form-wrap">
+  <div class="form-title">Calculate Your Birth Chart</div>
+  <div class="form-grid">
+    <div class="fg"><label>Full Name</label><input type="text" id="i-name" placeholder="Your name"/></div>
+    <div class="fg"><label>Date of Birth</label><input type="date" id="i-date"/></div>
+    <div class="fg"><label>Time of Birth (local)</label><input type="time" id="i-time"/></div>
+    <div class="fg">
+      <label>UTC Offset</label>
+      <input type="number" id="i-tz" value="0" step="0.5" min="-12" max="14" placeholder="e.g. 4"/>
+      <span class="hint">Your timezone offset incl. DST</span>
+    </div>
+    <div class="fg"><label>Latitude</label><input type="number" id="i-lat" placeholder="e.g. 41.6938" step="0.0001"/></div>
+    <div class="fg"><label>Longitude</label><input type="number" id="i-lng" placeholder="e.g. 44.8015" step="0.0001"/></div>
+  </div>
+  <button class="btn" id="btn" onclick="doCalc()">Calculate Chart</button>
+  <div class="loading" id="loading">Computing planetary positions…</div>
+</div>
+
+<div class="results" id="results">
+  <div class="chart-header">
+    <h2 id="d-name"></h2>
+    <div class="sub" id="d-date"></div>
+    <div class="axes" id="d-axes"></div>
+  </div>
+
+  <div class="chart-wrap">
+    <svg id="chart-svg" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="sec">Planetary Placements — Three-System Comparison</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:130px">Planet</th>
+        <th class="ch">Nuastro · Real-Sky</th>
+        <th style="width:44px;color:rgba(255,255,255,.5);font-size:8px;letter-spacing:.12em;">H</th>
+        <th>Tropical · Western</th>
+        <th>Vedic · Lahiri</th>
+      </tr></thead>
+      <tbody id="ptable"></tbody>
+    </table>
+  </div>
+
+  <div class="note"><strong>Real-Sky positioning:</strong> Nuastro uses IAU constellation boundaries with full VSOP87 precession correction. Ophiuchus is the 13th sign. House sizes reflect true constellation arc lengths. Houses are assigned only where a cusp falls — constellations too narrow to catch a cusp share a house.</div>
+</div>
+
+</div>
+<script src="nuastro-ephemeris.js"></script>
+<script>
+const PI=Math.PI,D2R=PI/180,R2D=180/PI;
+function n360(v){return((v%360)+360)%360}
+function n180(v){v=n360(v);return v>180?v-360:v}
+
+const IAU=[
+  {n:'Aries',      abbr:'Ari', lo:29.00,  hi:53.41},
+  {n:'Taurus',     abbr:'Tau', lo:53.41,  hi:90.46},
+  {n:'Gemini',     abbr:'Gem', lo:90.46,  hi:118.23},
+  {n:'Cancer',     abbr:'Cnc', lo:118.23, hi:138.18},
+  {n:'Leo',        abbr:'Leo', lo:138.18, hi:174.07},
+  {n:'Virgo',      abbr:'Vir', lo:174.07, hi:217.84},
+  {n:'Libra',      abbr:'Lib', lo:217.84, hi:241.03},
+  {n:'Scorpio',    abbr:'Sco', lo:241.03, hi:247.74},
+  {n:'Ophiuchus',  abbr:'Oph', lo:247.74, hi:266.55},
+  {n:'Sagittarius',abbr:'Sgr', lo:266.55, hi:299.71},
+  {n:'Capricorn',  abbr:'Cap', lo:299.71, hi:327.61},
+  {n:'Aquarius',   abbr:'Aqr', lo:327.61, hi:351.65},
+  {n:'Pisces',     abbr:'Psc', lo:351.65, hi:389.00},
+];
+
+const TROP=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const TABBR=['Ari','Tau','Gem','Cnc','Leo','Vir','Lib','Sco','Sgr','Cap','Aqr','Psc'];
+
+const PLANETS=[
+  {n:'Sun',g:'☉',id:'sun'},{n:'Moon',g:'☽',id:'moon'},
+  {n:'Mercury',g:'☿',id:'mercury'},{n:'Venus',g:'♀',id:'venus'},
+  {n:'Mars',g:'♂',id:'mars'},{n:'Jupiter',g:'♃',id:'jupiter'},
+  {n:'Saturn',g:'♄',id:'saturn'},{n:'Uranus',g:'♅',id:'uranus'},
+  {n:'Neptune',g:'♆',id:'neptune'},{n:'Pluto',g:'♇',id:'pluto'},
+  {n:'Chiron',g:'⚷',id:'chiron'},
+];
+
+// ── IAU helpers ───────────────────────────────────────────────────────────────
+function iauIdx(lon){
+  const l=n360(lon);
+  for(let i=0;i<IAU.length;i++){
+    const c=IAU[i];
+    const hi=c.hi>360?c.hi-360:c.hi;
+    if(c.lo>hi){if(l>=c.lo||l<hi)return i;}
+    else{if(l>=c.lo&&l<c.hi)return i;}
+  }
+  return 12;
+}
+
+function nuastroP(lon){
+  const i=iauIdx(lon), c=IAU[i], l=n360(lon);
+  const hi=c.hi>360?c.hi-360:c.hi;
+  const deg=c.lo>hi?(l>=c.lo?l-c.lo:(360-c.lo)+l):l-c.lo;
+  return{n:c.n,abbr:c.abbr,deg,oph:c.n==='Ophiuchus'};
+}
+function tropP(lon){
+  const l=n360(lon),i=Math.floor(l/30);
+  return{n:TROP[i],abbr:TABBR[i],deg:l-i*30};
+}
+function vedicP(lon,ay){
+  const s=n360(lon-ay),i=Math.floor(s/30);
+  return{n:TROP[i],abbr:TABBR[i],deg:s-i*30};
+}
+function fmtDeg(d){
+  d=Math.max(0,d);
+  return String(Math.floor(d)).padStart(2,'0')+'°'+String(Math.floor((d%1)*60)).padStart(2,'0')+"'";
+}
+
+// ── House system ──────────────────────────────────────────────────────────────
+// House 1 = constellation containing ASC
+// Each subsequent constellation boundary = next house cusp
+// A planet's house = which constellation it's in, mapped to house number
+// If a constellation is narrower than the gap between cusps (i.e. the cusp
+// doesn't land inside it), it shares the previous house — but with 13
+// constellations and 13 houses stepping through boundaries this always gives
+// each constellation exactly one house, UNLESS the ASC is so positioned that
+// we cycle back. In practice each boundary = one house cusp so all 13 get one.
+function buildHouses(asc){
+  const startIdx=iauIdx(asc);
+  const houses=[];
+  for(let step=0;step<13;step++){
+    const idx=(startIdx+step)%13;
+    const cusp=step===0?asc:IAU[idx].lo;
+    houses.push({num:step+1,iauIdx:idx,cusp,name:IAU[idx].n,abbr:IAU[idx].abbr});
+  }
+  return houses;
+}
+
+function planetHouse(lon,houses){
+  const pidx=iauIdx(lon);
+  const h=houses.find(h=>h.iauIdx===pidx);
+  return h?h.num:'-';
+}
+
+// ── MAIN ──────────────────────────────────────────────────────────────────────
+function doCalc(){
+  const name=document.getElementById('i-name').value.trim()||'Birth Chart';
+  const dv=document.getElementById('i-date').value;
+  const tv=document.getElementById('i-time').value||'12:00';
+  const tz=parseFloat(document.getElementById('i-tz').value)||0;
+  const lat=parseFloat(document.getElementById('i-lat').value)||0;
+  const lng=parseFloat(document.getElementById('i-lng').value)||0;
+  if(!dv){alert('Please enter a birth date.');return;}
+  const[yr,mo,dy]=dv.split('-').map(Number);
+  const[hr,mn]=tv.split(':').map(Number);
+  document.getElementById('btn').disabled=true;
+  document.getElementById('loading').style.display='block';
+  setTimeout(()=>{
+    try{
+      const data=window.NuastroEph.calculate(yr,mo,dy,hr,mn,tz,lat,lng);
+      const houses=buildHouses(data.asc);
+      document.getElementById('d-name').textContent=name;
+      const ds=new Date(yr,mo-1,dy).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+      document.getElementById('d-date').textContent=`${ds} · ${tv}`;
+      const aT=tropP(data.asc),iT=tropP(n360(data.mc+180)),dT=tropP(n360(data.asc+180)),mT=tropP(data.mc);
+      document.getElementById('d-axes').textContent=
+        `ASC ${aT.abbr} ${fmtDeg(aT.deg)}  ·  IC ${iT.abbr} ${fmtDeg(iT.deg)}  ·  DSC ${dT.abbr} ${fmtDeg(dT.deg)}  ·  MC ${mT.abbr} ${fmtDeg(mT.deg)}`;
+      drawChart(data,houses);
+      buildTable(data,houses);
+      document.getElementById('results').classList.add('on');
+      document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(e){alert('Error: '+e.message);console.error(e);}
+    finally{document.getElementById('btn').disabled=false;document.getElementById('loading').style.display='none';}
+  },30);
+}
+
+// ── DRAW CHART ────────────────────────────────────────────────────────────────
+function drawChart(data,houses){
+  const svg=document.getElementById('chart-svg');
+  svg.innerHTML='';
+  const cx=350,cy=350;
+  const Ro=310, Rs=276, Ri=238, Rp=200, Rc=94, Rcore=52;
+  const asc=data.asc, mc=data.mc;
+
+  function ns(tag,attrs){
+    const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
+    for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);
+    return e;
+  }
+  // CW from top: ASC lon → 270° (9 o'clock)
+  function e2a(lon){return n360(270-(lon-asc));}
+  function pt(a,r){const rad=a*D2R;return{x:cx+r*Math.sin(rad),y:cy-r*Math.cos(rad)};}
+  function ln(x1,y1,x2,y2,s,w,dash){
+    const l=ns('line',{x1,y1,x2,y2,stroke:s,'stroke-width':w});
+    if(dash)l.setAttribute('stroke-dasharray',dash);
+    return l;
+  }
+  function tx(txt,x,y,{sz=12,fill='#111110',anchor='middle',font='Jost,sans-serif',wt='300',style=''}={}){
+    const t=ns('text',{x,y,'text-anchor':anchor,'dominant-baseline':'central',
+      fill,'font-size':sz,'font-family':font,'font-weight':wt,style});
+    t.textContent=txt;return t;
+  }
+  function circ(r,fill,stroke,sw){return ns('circle',{cx,cy,r,fill,stroke,'stroke-width':sw});}
+
+  // BG
+  svg.appendChild(ns('rect',{x:0,y:0,width:700,height:700,fill:'#FFFFFF'}));
+  svg.appendChild(circ(Ro,'#FFFFFF','#111110',1.8));
+
+  // ── Constellation sectors ──
+  for(let i=0;i<IAU.length;i++){
+    const c=IAU[i];
+    const sa=e2a(c.lo);
+    const ea=e2a(c.hi>360?c.hi-360:c.hi);
+    // Outer spoke
+    const pO=pt(sa,Ro),pS=pt(sa,Rs),pI=pt(sa,Ri);
+    svg.appendChild(ln(pO.x,pO.y,pS.x,pS.y,'#111110',1));
+    svg.appendChild(ln(pS.x,pS.y,pI.x,pI.y,'#AAAAAA',0.5));
+
+    // Ophiuchus subtle fill
+    if(c.n==='Ophiuchus'){
+      const pO1=pt(sa,Ro),pO2=pt(ea,Ro),pS1=pt(sa,Rs),pS2=pt(ea,Rs);
+      const d=`M${pO1.x},${pO1.y} A${Ro},${Ro} 0 0,1 ${pO2.x},${pO2.y} L${pS2.x},${pS2.y} A${Rs},${Rs} 0 0,0 ${pS1.x},${pS1.y} Z`;
+      svg.appendChild(ns('path',{d,fill:'#F0EDE6',opacity:'0.9'}));
+    }
+
+    // Sign abbr label
+    const midLon=c.n==='Pisces'?n360((351.65+360+29.0)/2):(c.lo+Math.min(c.hi,360))/2;
+    const gp=pt(e2a(n360(midLon)),(Ro+Rs)/2);
+    svg.appendChild(tx(c.abbr,gp.x,gp.y,{sz:12,fill:'#111110',font:"'Cormorant Garamond',serif",wt:'600'}));
+  }
+
+  // Rings
+  svg.appendChild(circ(Rs,'none','#111110',1));
+  svg.appendChild(circ(Ri,'none','#888888',0.5));
+  svg.appendChild(circ(Rc,'none','#888888',0.6));
+  svg.appendChild(circ(Rcore,'none','#888888',1));
+
+  // ── House lines + numbers (cusp-based, unequal) ──
+  for(const h of houses){
+    const cusp=h.num===1?asc:h.cusp;
+    const ha=e2a(cusp);
+    const ph1=pt(ha,Ri),ph2=pt(ha,Rc);
+    svg.appendChild(ln(ph1.x,ph1.y,ph2.x,ph2.y,'#CCCCCC',0.5));
+    // House number at midpoint of this constellation's arc
+    const midLon=h.name==='Pisces'?n360((351.65+360+29.0)/2):(IAU[h.iauIdx].lo+Math.min(IAU[h.iauIdx].hi,360))/2;
+    const hn=pt(e2a(n360(midLon)),(Ri+Rc)/2);
+    const hFill=h.num===1?'#888888':'#CCCCCC';
+    svg.appendChild(tx(String(h.num),hn.x,hn.y,{sz:11,fill:hFill,wt:'300'}));
+  }
+
+  // ── Four axis lines — absolute coords, guaranteed visible ──
+  // ASC–DSC horizontal
+  svg.appendChild(ln(cx-Ro,cy,cx+Ro,cy,'#111110',1.5));
+
+  // IC–MC diagonal
+  const mcA=e2a(mc);
+  const icEnd=pt(mcA,Ro);         // upper = IC
+  const mcEnd=pt(n360(mcA+180),Ro); // lower = MC
+  svg.appendChild(ln(icEnd.x,icEnd.y,mcEnd.x,mcEnd.y,'#111110',1.5));
+
+  // Axis labels
+  const lS={sz:9,fill:'#888888',wt:'600',font:'Jost,sans-serif'};
+  svg.appendChild(tx('ASC',cx-Ro-12,cy,{...lS,anchor:'end'}));
+  svg.appendChild(tx('DSC',cx+Ro+12,cy,{...lS,anchor:'start'}));
+  svg.appendChild(tx('IC',icEnd.x,icEnd.y-14,lS));
+  svg.appendChild(tx('MC',mcEnd.x,mcEnd.y+14,lS));
+
+  // ASC sign label inside wheel
+  const ascP=nuastroP(asc);
+  svg.appendChild(tx(ascP.abbr,pt(e2a(asc)+2,Ri-20).x,pt(e2a(asc)+2,Ri-20).y,
+    {sz:10,fill:'#888888',font:"'Cormorant Garamond',serif",wt:'600'}));
+
+  // Aspect lines (personal planets only)
+  const aspIds=['sun','moon','mercury','venus','mars'];
+  const aspCols=['#AAAAAA','#BBBBBB','#CCCCCC','#BBBBBB','#AAAAAA'];
+  for(let a=0;a<aspIds.length;a++){
+    for(let b=a+1;b<aspIds.length;b++){
+      const diff=Math.abs(n180(data.planets[aspIds[a]].lon-data.planets[aspIds[b]].lon));
+      if([0,60,90,120,180].some(m=>Math.abs(diff-m)<8)){
+        const pa=pt(e2a(data.planets[aspIds[a]].lon),Rcore-6);
+        const pb=pt(e2a(data.planets[aspIds[b]].lon),Rcore-6);
+        const l=ln(pa.x,pa.y,pb.x,pb.y,aspCols[a],0.7);
+        l.setAttribute('opacity','0.5');
+        svg.appendChild(l);
+      }
+    }
+  }
+
+  // Center diamond
+  const d=8;
+  svg.appendChild(ns('polygon',{points:`${cx},${cy-d} ${cx+d},${cy} ${cx},${cy+d} ${cx-d},${cy}`,fill:'#888888'}));
+
+  // ── Planet glyphs with spread ──
+  const pl=PLANETS.map(p=>({
+    ...p,
+    origA:e2a(data.planets[p.id].lon),
+    ang:e2a(data.planets[p.id].lon),
+    rx:data.planets[p.id].rx
+  }));
+  pl.sort((a,b)=>a.ang-b.ang);
+  for(let iter=0;iter<12;iter++){
+    for(let i=0;i<pl.length;i++){
+      const j=(i+1)%pl.length;
+      const diff=n180(pl[j].ang-pl[i].ang);
+      const minSep=13;
+      if(Math.abs(diff)<minSep){
+        const push=(minSep-Math.abs(diff))/2+0.4;
+        if(diff>=0){pl[i].ang=n360(pl[i].ang-push);pl[j].ang=n360(pl[j].ang+push);}
+        else{pl[i].ang=n360(pl[i].ang+push);pl[j].ang=n360(pl[j].ang-push);}
+      }
+    }
+  }
+  for(const p of pl){
+    // Tick at actual position
+    const t1=pt(p.origA,Ri-1),t2=pt(p.origA,Ri-10);
+    svg.appendChild(ln(t1.x,t1.y,t2.x,t2.y,'#999999',0.7));
+    // Glyph at spread position
+    const gp=pt(p.ang,Rp);
+    svg.appendChild(tx(p.g,gp.x,gp.y,{sz:16,fill:'#111110',font:"'Cormorant Garamond',serif",wt:'400'}));
+    if(p.rx) svg.appendChild(tx('℞',gp.x+11,gp.y-9,{sz:9,fill:'#A03030',wt:'400'}));
+  }
+}
+
+// ── TABLE ─────────────────────────────────────────────────────────────────────
+function buildTable(data,houses){
+  const tbody=document.getElementById('ptable');
+  tbody.innerHTML='';
+
+  // Angle rows
+  const angles=[
+    {n:'ASC',lon:data.asc},
+    {n:'IC', lon:n360(data.mc+180)},
+    {n:'DSC',lon:n360(data.asc+180)},
+    {n:'MC', lon:data.mc},
+  ];
+  for(const a of angles){
+    const nu=nuastroP(a.lon),tr2=tropP(a.lon),ve=vedicP(a.lon,data.ayan);
+    const h=planetHouse(a.lon,houses);
+    const row=document.createElement('tr');
+    row.className='tr-angle';
+    row.innerHTML=`
+      <td><div class="td-p">${a.n}</div></td>
+      <td class="td-pl"><span class="sn">${nu.n}</span><span class="dg">${fmtDeg(nu.deg)}</span></td>
+      <td class="td-pl"><span class="hn">${h}</span></td>
+      <td class="td-pl"><span class="sn">${tr2.n}</span><span class="dg">${fmtDeg(tr2.deg)}</span></td>
+      <td class="td-pl"><span class="sn">${ve.n}</span><span class="dg">${fmtDeg(ve.deg)}</span></td>`;
+    tbody.appendChild(row);
+  }
+
+  // Divider
+  const div=document.createElement('tr');
+  div.innerHTML=`<td colspan="5" style="padding:0;height:.5px;background:var(--border);"></td>`;
+  tbody.appendChild(div);
+
+  // Planet rows
+  for(const p of PLANETS){
+    const lon=data.planets[p.id].lon,rx=data.planets[p.id].rx;
+    const nu=nuastroP(lon),tr2=tropP(lon),ve=vedicP(lon,data.ayan);
+    const h=planetHouse(lon,houses);
+    const rxH=rx?'<span class="rx">℞</span>':'';
+    const ophS=nu.oph?'font-style:italic;':'';
+    const row=document.createElement('tr');
+    row.innerHTML=`
+      <td><div class="td-p"><span class="pg">${p.g}</span>${p.n}</div></td>
+      <td class="td-pl"><span class="sn" style="${ophS}">${nu.n}</span><span class="dg">${fmtDeg(nu.deg)}</span>${rxH}</td>
+      <td class="td-pl"><span class="hn">${h}</span></td>
+      <td class="td-pl"><span class="sn">${tr2.n}</span><span class="dg">${fmtDeg(tr2.deg)}</span>${rxH}</td>
+      <td class="td-pl"><span class="sn">${ve.n}</span><span class="dg">${fmtDeg(ve.deg)}</span>${rxH}</td>`;
+    tbody.appendChild(row);
+  }
+}
+
+// ── AUTO-RESIZE ───────────────────────────────────────────────────────────────
+function reportHeight(){
+  window.parent.postMessage({type:'nuastro-height',height:document.documentElement.scrollHeight},'*');
+}
+window.addEventListener('load',reportHeight);
+window.addEventListener('resize',reportHeight);
+new MutationObserver(()=>setTimeout(reportHeight,100)).observe(document.body,{childList:true,subtree:true});
+</script>
+</body>
+</html>
