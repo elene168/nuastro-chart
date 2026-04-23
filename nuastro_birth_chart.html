@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuastro Birth Chart</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#111110;--ink-mid:#444442;--ink-soft:#888886;
+  --bg:#FFFFFF;--bg-soft:#F8F8F6;--bg-mid:#F0F0EE;
+  --border:#E0E0DC;
+}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--ink);font-family:'Jost',sans-serif;font-weight:300}
+.page{max-width:1080px;margin:0 auto;padding:40px 28px 72px}
+.brand{text-align:center;margin-bottom:36px;padding-bottom:28px;border-bottom:.5px solid var(--border)}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:400;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);margin-bottom:3px}
+.brand-sub{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+.form-wrap{max-width:760px;margin:0 auto 48px}
+.form-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;letter-spacing:.02em;margin-bottom:22px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 22px;margin-bottom:20px}
+.fg{display:flex;flex-direction:column;gap:5px}
+label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft)}
+input{background:var(--bg-soft);border:.5px solid var(--border);padding:9px 12px;font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--ink);outline:none;transition:border-color .15s}
+input:focus{border-color:var(--ink)}
+.hint{font-size:10px;color:var(--ink-soft);margin-top:2px}
+.btn{width:100%;background:var(--ink);color:var(--bg);border:none;padding:13px;font-family:'Jost',sans-serif;font-size:10px;font-weight:400;letter-spacing:.28em;text-transform:uppercase;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.7}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.loading{display:none;text-align:center;padding:14px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft)}
+.results{display:none}
+.results.on{display:block}
+.ch{text-align:center;margin-bottom:24px}
+.ch h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;letter-spacing:.05em}
+.ch .sub{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-top:4px}
+.ch .axes{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mid);margin-top:7px;font-weight:400}
+.chart-wrap{display:flex;justify-content:center;margin-bottom:44px}
+#chart-svg{width:100%;max-width:680px}
+.sec{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.sec::after{content:'';flex:1;height:.5px;background:var(--border)}
+.tw{overflow-x:auto;border:.5px solid var(--border);margin-bottom:44px}
+table{width:100%;border-collapse:collapse;font-size:12px;background:var(--bg)}
+thead tr{background:var(--ink)}
+thead th{padding:10px 13px;font-size:8px;letter-spacing:.2em;text-transform:uppercase;font-weight:400;text-align:left;color:rgba(255,255,255,.55)}
+thead th.th-nu{color:rgba(255,255,255,.9)}
+tbody tr{border-bottom:.5px solid var(--border)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--bg-soft)}
+td{padding:9px 13px;vertical-align:middle}
+.td-p{display:flex;align-items:center;gap:7px;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:400}
+.pg{font-size:15px;color:var(--ink-mid);width:20px;text-align:center}
+.sn{color:var(--ink)}
+.dg{color:var(--ink-soft);font-size:11px;margin-left:2px}
+.rx{color:#A03030;font-size:9px;margin-left:3px}
+.hn{font-size:11px;color:var(--ink-soft)}
+.tr-ang{background:var(--bg-soft)!important}
+.tr-ang .td-p{font-size:11px;letter-spacing:.05em;font-family:'Jost',sans-serif;color:var(--ink-soft);font-weight:400}
+.note{padding:12px 15px;border-left:1px solid var(--border);font-size:11px;color:var(--ink-soft);line-height:1.75}
+.note strong{color:var(--ink-mid);font-weight:400}
+.geo-status{font-size:10px;margin-top:3px;min-height:14px;color:var(--ink-soft)}
+.geo-status.ok{color:#4A7A4A}
+.geo-status.err{color:#A03030}
+select{background:var(--bg-soft);border:.5px solid var(--border);padding:9px 12px;font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--ink);outline:none;transition:border-color .15s;appearance:none;cursor:pointer;width:100%}
+select:focus{border-color:var(--ink)}
+@media(max-width:680px){.fg3{grid-template-columns:1fr 1fr}.page{padding:24px 16px 56px}}
+@media(max-width:420px){.fg3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="brand">
+  <div class="brand-name">Nuastro</div>
+  <div class="brand-sub">Real-Sky Birth Chart · IAU Constellation Boundaries · 13 Signs</div>
+</div>
+<div class="form-wrap">
+  <div class="form-title">Calculate Your Birth Chart</div>
+  <div class="fg3">
+    <div class="fg"><label>Name</label><input type="text" id="i-name" placeholder="Your name"/></div>
+    <div class="fg">
+      <label>Gender</label>
+      <select id="i-gender">
+        <option value="she">She / Her</option>
+        <option value="he">He / Him</option>
+        <option value="they">They / Them</option>
+        <option value="none">Prefer not to say</option>
+      </select>
+    </div>
+    <div class="fg"><label>Date of Birth</label><input type="date" id="i-date"/></div>
+    <div class="fg"><label>Time of Birth (local)</label><input type="time" id="i-time"/></div>
+    <div class="fg">
+      <label>Place of Birth</label>
+      <input type="text" id="i-place" placeholder="e.g. Tbilisi, Georgia" oninput="scheduleGeocode()"/>
+      <div class="geo-status" id="geo-status"></div>
+    </div>
+    <div class="fg">
+      <label>UTC Offset</label>
+      <input type="number" id="i-tz" value="0" step="0.5" min="-12" max="14" placeholder="e.g. 4"/>
+      <span class="hint">Auto-filled · adjust for DST if needed</span>
+    </div>
+  </div>
+  <!-- Hidden coordinate fields populated by geocoding -->
+  <input type="hidden" id="i-lat" value="0"/>
+  <input type="hidden" id="i-lng" value="0"/>
+  <button class="btn" id="btn" onclick="doCalc()">Calculate Chart</button>
+  <div class="loading" id="loading">Computing planetary positions…</div>
+</div>
+
+<div class="results" id="results">
+  <div class="ch">
+    <h2 id="d-name"></h2>
+    <div class="sub" id="d-date"></div>
+    <div class="axes" id="d-axes"></div>
+  </div>
+  <div class="chart-wrap">
+    <svg id="chart-svg" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="sec">Planetary Placements — Three-System Comparison</div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th style="width:125px">Planet</th>
+        <th class="th-nu">Nuastro · Real-Sky</th>
+        <th style="width:36px;letter-spacing:.1em;color:rgba(255,255,255,.45)">H</th>
+        <th>Tropical · Western</th>
+        <th>Vedic · Lahiri</th>
+      </tr></thead>
+      <tbody id="ptable"></tbody>
+    </table>
+  </div>
+  <div class="note"><strong>Real-Sky positioning:</strong> Full VSOP87 accuracy. IAU constellation boundaries with Ophiuchus as the 13th sign. House wheel is fixed in zodiac order — H1 always Aries-sized, rotating only the constellation labels and planets by ASC.</div>
+</div>
+</div>
+
+<script src="nuastro-ephemeris.js"></script>
+<script>
+const PI=Math.PI,D2R=PI/180,R2D=180/PI;
+function n360(v){return((v%360)+360)%360}
+function n180(v){v=n360(v);return v>180?v-360:v}
+
+// ── FIXED HOUSE WHEEL ─────────────────────────────────────────────────────────
+// These arc sizes never change. H1 always Aries-sized, etc.
+// Derived from IAU constellation arc lengths along the ecliptic.
+const FIXED=[
+  {h:1, arc:24.41,ref:'Aries'},      {h:2, arc:37.05,ref:'Taurus'},
+  {h:3, arc:27.77,ref:'Gemini'},     {h:4, arc:19.95,ref:'Cancer'},
+  {h:5, arc:35.89,ref:'Leo'},        {h:6, arc:43.77,ref:'Virgo'},
+  {h:7, arc:23.19,ref:'Libra'},      {h:8, arc:6.71, ref:'Scorpio'},
+  {h:9, arc:18.81,ref:'Ophiuchus'},  {h:10,arc:33.16,ref:'Sagittarius'},
+  {h:11,arc:27.90,ref:'Capricorn'},  {h:12,arc:24.04,ref:'Aquarius'},
+  {h:13,arc:37.35,ref:'Pisces'},
+];
+let _cum=0;
+FIXED.forEach(h=>{h.start=_cum;_cum+=h.arc;});
+
+// ── IAU CONSTELLATION TABLE ───────────────────────────────────────────────────
+const IAU=[
+  {n:'Aries',      abbr:'Ari',lo:29.00, hi:53.41},
+  {n:'Taurus',     abbr:'Tau',lo:53.41, hi:90.46},
+  {n:'Gemini',     abbr:'Gem',lo:90.46, hi:118.23},
+  {n:'Cancer',     abbr:'Cnc',lo:118.23,hi:138.18},
+  {n:'Leo',        abbr:'Leo',lo:138.18,hi:174.07},
+  {n:'Virgo',      abbr:'Vir',lo:174.07,hi:217.84},
+  {n:'Libra',      abbr:'Lib',lo:217.84,hi:241.03},
+  {n:'Scorpio',    abbr:'Sco',lo:241.03,hi:247.74},
+  {n:'Ophiuchus',  abbr:'Oph',lo:247.74,hi:266.55},
+  {n:'Sagittarius',abbr:'Sgr',lo:266.55,hi:299.71},
+  {n:'Capricorn',  abbr:'Cap',lo:299.71,hi:327.61},
+  {n:'Aquarius',   abbr:'Aqr',lo:327.61,hi:351.65},
+  {n:'Pisces',     abbr:'Psc',lo:351.65,hi:389.00},
+];
+const TROP=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const TABBR=['Ari','Tau','Gem','Cnc','Leo','Vir','Lib','Sco','Sgr','Cap','Aqr','Psc'];
+const PLANETS=[
+  {n:'Sun',g:'☉',id:'sun'},{n:'Moon',g:'☽',id:'moon'},
+  {n:'Mercury',g:'☿',id:'mercury'},{n:'Venus',g:'♀',id:'venus'},
+  {n:'Mars',g:'♂',id:'mars'},{n:'Jupiter',g:'♃',id:'jupiter'},
+  {n:'Saturn',g:'♄',id:'saturn'},{n:'Uranus',g:'♅',id:'uranus'},
+  {n:'Neptune',g:'♆',id:'neptune'},{n:'Pluto',g:'♇',id:'pluto'},
+  {n:'Chiron',g:'⚷',id:'chiron'},
+];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function iauIdx(lon){
+  const l=n360(lon);
+  for(let i=0;i<IAU.length;i++){
+    const c=IAU[i];
+    const hi=c.hi>360?c.hi-360:c.hi;
+    if(c.lo>hi){if(l>=c.lo||l<hi)return i;}
+    else{if(l>=c.lo&&l<c.hi)return i;}
+  }
+  return 12;
+}
+function degInIAU(lon){
+  const i=iauIdx(lon),c=IAU[i],l=n360(lon);
+  const hi=c.hi>360?c.hi-360:c.hi;
+  return c.lo>hi?(l>=c.lo?l-c.lo:(360-c.lo)+l):l-c.lo;
+}
+function arcOfIAU(i){
+  const c=IAU[i];
+  return c.hi>360?(c.hi-360-c.lo+360):c.hi-c.lo;
+}
+
+// Map ecliptic longitude → wheel degrees (0 = ASC position = H1 start reference)
+// ASC pins to wheel degree 0. Each constellation maps proportionally into its fixed house arc.
+function lonToWheel(lon,asc){
+  const ascIdx=iauIdx(asc);
+  const ascFrac=degInIAU(asc)/arcOfIAU(ascIdx);
+  const ascOffset=ascFrac*FIXED[0].arc;
+
+  const lonIdx=iauIdx(lon);
+  const hIdx=(lonIdx-ascIdx+13)%13;
+  const lonFrac=degInIAU(lon)/arcOfIAU(lonIdx);
+  return n360(FIXED[hIdx].start + lonFrac*FIXED[hIdx].arc - ascOffset);
+}
+
+// Which house number for a wheel degree
+function wheelToHouse(wdeg){
+  for(let i=0;i<13;i++){
+    const next=i<12?FIXED[i+1].start:360;
+    if(wdeg>=FIXED[i].start&&wdeg<next)return i+1;
+  }
+  return 13;
+}
+
+function nuastroP(lon){
+  const i=iauIdx(lon),c=IAU[i];
+  return{n:c.n,abbr:c.abbr,deg:degInIAU(lon),oph:c.n==='Ophiuchus'};
+}
+function tropP(lon){
+  const l=n360(lon),i=Math.floor(l/30);
+  return{n:TROP[i],abbr:TABBR[i],deg:l-i*30};
+}
+function vedicP(lon,ay){
+  const s=n360(lon-ay),i=Math.floor(s/30);
+  return{n:TROP[i],abbr:TABBR[i],deg:s-i*30};
+}
+function fmtD(d){
+  d=Math.max(0,d);
+  return String(Math.floor(d)).padStart(2,'0')+'°'+String(Math.floor((d%1)*60)).padStart(2,'0')+"'";
+}
+
+// ── GEOCODING (OpenStreetMap Nominatim — free, no key needed) ─────────────────
+let _geoTimer=null;
+function scheduleGeocode(){
+  clearTimeout(_geoTimer);
+  _geoTimer=setTimeout(geocode,800); // wait 800ms after user stops typing
+}
+
+async function geocode(){
+  const place=document.getElementById('i-place').value.trim();
+  const status=document.getElementById('geo-status');
+  if(place.length<3){status.textContent='';status.className='geo-status';return;}
+  status.textContent='Looking up…';status.className='geo-status';
+  try{
+    const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place)}&format=json&limit=1&addressdetails=1`;
+    const res=await fetch(url,{headers:{'Accept-Language':'en'}});
+    const data=await res.json();
+    if(!data||data.length===0){
+      status.textContent='Location not found — try a different spelling';
+      status.className='geo-status err';return;
+    }
+    const r=data[0];
+    document.getElementById('i-lat').value=parseFloat(r.lat).toFixed(4);
+    document.getElementById('i-lng').value=parseFloat(r.lon).toFixed(4);
+
+    // Auto-estimate UTC offset from longitude (rough but better than nothing)
+    // User can override manually for DST accuracy
+    const lng=parseFloat(r.lon);
+    const roughOffset=Math.round(lng/15);
+    document.getElementById('i-tz').value=roughOffset;
+
+    const display=r.display_name.split(',').slice(0,3).join(',');
+    status.textContent=`Found: ${display} (lat ${parseFloat(r.lat).toFixed(2)}, lng ${parseFloat(r.lon).toFixed(2)}) · UTC${roughOffset>=0?'+':''}${roughOffset} estimated`;
+    status.className='geo-status ok';
+  }catch(e){
+    status.textContent='Could not look up location — please try again';
+    status.className='geo-status err';
+  }
+}
+
+// ── MAIN ──────────────────────────────────────────────────────────────────────
+function doCalc(){
+  const name=document.getElementById('i-name').value.trim()||'Birth Chart';
+  const gender=document.getElementById('i-gender').value;
+  const place=document.getElementById('i-place').value.trim();
+  const dv=document.getElementById('i-date').value;
+  const tv=document.getElementById('i-time').value||'12:00';
+  const tz=parseFloat(document.getElementById('i-tz').value)||0;
+  const lat=parseFloat(document.getElementById('i-lat').value)||0;
+  const lng=parseFloat(document.getElementById('i-lng').value)||0;
+  if(!dv){alert('Please enter a birth date.');return;}
+  if(!lat&&!lng){alert('Please enter a place of birth so we can look up coordinates.');return;}
+  const[yr,mo,dy]=dv.split('-').map(Number);
+  const[hr,mn]=tv.split(':').map(Number);
+  document.getElementById('btn').disabled=true;
+  document.getElementById('loading').style.display='block';
+  setTimeout(()=>{
+    try{
+      const data=window.NuastroEph.calculate(yr,mo,dy,hr,mn,tz,lat,lng);
+      document.getElementById('d-name').textContent=name;
+      const ds=new Date(yr,mo-1,dy).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+      const placeStr=place?` · ${place}`:'';
+      document.getElementById('d-date').textContent=`${ds} · ${tv}${placeStr}`;
+      // Footer: tropical angles
+      const aT=tropP(data.asc),icT=tropP(n360(data.mc+180));
+      const dT=tropP(n360(data.asc+180)),mT=tropP(data.mc);
+      document.getElementById('d-axes').textContent=
+        `ASC ${aT.abbr} ${fmtD(aT.deg)}  ·  IC ${icT.abbr} ${fmtD(icT.deg)}  ·  DSC ${dT.abbr} ${fmtD(dT.deg)}  ·  MC ${mT.abbr} ${fmtD(mT.deg)}`;
+      drawChart(data);
+      buildTable(data);
+      document.getElementById('results').classList.add('on');
+      // Report height once after render settles — no loops
+      setTimeout(reportHeight, 300);
+    }catch(e){alert('Error: '+e.message);console.error(e);}
+    finally{document.getElementById('btn').disabled=false;document.getElementById('loading').style.display='none';}
+  },30);
+}
+
+// ── DRAW CHART ────────────────────────────────────────────────────────────────
+function drawChart(data){
+  const svg=document.getElementById('chart-svg');
+  svg.innerHTML='';
+  const cx=340,cy=340;
+  const Ro=300,Rs=268,Rm=240,Ri=215,Rp=183,Rc=88,Rcore=50;
+  const asc=data.asc,mc=data.mc;
+
+  function ns(tag,attrs){
+    const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
+    for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);
+    return e;
+  }
+  // OUTER RING: ecliptic → SVG directly. ASC always at 270° (9oclock). CCW = subtract.
+  function e2svg(lon){return n360(270-(lon-asc));}
+  // INNER RING: fixed house wheel → SVG. H1 at 270°. CCW = subtract.
+  function h2svg(wdeg){return n360(270-wdeg);}
+
+  function pt(a,r){const rad=a*D2R;return{x:cx+r*Math.sin(rad),y:cy-r*Math.cos(rad)};}
+  function ln(x1,y1,x2,y2,s,w,dash){
+    const l=ns('line',{x1,y1,x2,y2,stroke:s,'stroke-width':w});
+    if(dash)l.setAttribute('stroke-dasharray',dash);return l;
+  }
+  function tx(t,x,y,{sz=11,fill='#111110',anchor='middle',font='Jost,sans-serif',wt='300'}={}){
+    const el=ns('text',{x,y,'text-anchor':anchor,'dominant-baseline':'central',
+      fill,'font-size':sz,'font-family':font,'font-weight':wt});
+    el.textContent=t;return el;
+  }
+  function circ(r,fill,stroke,sw){return ns('circle',{cx,cy,r,fill,stroke,'stroke-width':sw});}
+
+  svg.appendChild(ns('rect',{x:0,y:0,width:680,height:680,fill:'#FFFFFF'}));
+  svg.appendChild(circ(Ro,'#FFFFFF','#111110',1.8));
+
+  // ── OUTER RING: constellation belt (natural IAU arc sizes, rotates with ASC) ──
+  for(let i=0;i<IAU.length;i++){
+    const c=IAU[i];
+    const startSvg=e2svg(c.lo);
+    const endHi=c.hi>360?c.hi-360:c.hi;
+    const endSvg=e2svg(endHi);
+
+    // Boundary spoke Ro → Rm
+    const p1=pt(startSvg,Ro),p2=pt(startSvg,Rm);
+    svg.appendChild(ln(p1.x,p1.y,p2.x,p2.y,'#111110',0.9));
+
+    // Ophiuchus fill in outer ring
+    if(c.n==='Ophiuchus'){
+      const pO1=pt(startSvg,Ro),pO2=pt(endSvg,Ro);
+      const pM1=pt(startSvg,Rm),pM2=pt(endSvg,Rm);
+      const d=`M${pO1.x},${pO1.y} A${Ro},${Ro} 0 0,0 ${pO2.x},${pO2.y} L${pM2.x},${pM2.y} A${Rm},${Rm} 0 0,1 ${pM1.x},${pM1.y} Z`;
+      svg.appendChild(ns('path',{d,fill:'#F0EDE6',opacity:'0.9'}));
+    }
+
+    // Constellation label at natural midpoint
+    const midLon=c.n==='Pisces'?n360((351.65+360+29.0)/2):(c.lo+Math.min(c.hi,360))/2;
+    const gp=pt(e2svg(n360(midLon)),(Ro+Rm)/2);
+    svg.appendChild(tx(c.abbr,gp.x,gp.y,{sz:11,fill:'#111110',font:"'Cormorant Garamond',serif",wt:'600'}));
+  }
+
+  // Ring borders
+  svg.appendChild(circ(Rm,'none','#111110',1));
+
+  // ── INNER RING: fixed house wheel (never rotates) ──
+  for(let i=0;i<13;i++){
+    const spokeAng=h2svg(FIXED[i].start);
+    const p1=pt(spokeAng,Rm),p2=pt(spokeAng,Rc);
+    svg.appendChild(ln(p1.x,p1.y,p2.x,p2.y,'#AAAAAA',0.5));
+    const midH=n360(FIXED[i].start+FIXED[i].arc/2);
+    const hn=pt(h2svg(midH),(Rm+Rc)/2);
+    svg.appendChild(tx(String(i+1),hn.x,hn.y,{sz:10,fill:'#CCCCCC',wt:'300'}));
+  }
+
+  svg.appendChild(circ(Rc,'none','#999999',0.7));
+  svg.appendChild(circ(Rcore,'none','#999999',1));
+
+  // ── FOUR AXIS LINES — all through (cx,cy) ──
+  // ASC–DSC: always perfectly horizontal
+  svg.appendChild(ln(cx-Ro,cy,cx+Ro,cy,'#111110',1.5));
+  // MC–IC: use direct ecliptic position
+  const mcSvg=e2svg(mc), icSvg=e2svg(n360(mc+180));
+  const mcPt=pt(mcSvg,Ro), icPt=pt(icSvg,Ro);
+  svg.appendChild(ln(mcPt.x,mcPt.y,icPt.x,icPt.y,'#111110',1.5));
+
+  // Labels
+  const lS={sz:9,fill:'#888888',wt:'600',font:'Jost,sans-serif'};
+  svg.appendChild(tx('ASC',cx-Ro-12,cy,{...lS,anchor:'end'}));
+  svg.appendChild(tx('DSC',cx+Ro+12,cy,{...lS,anchor:'start'}));
+  const topPt=mcPt.y<=icPt.y?mcPt:icPt;
+  const botPt=mcPt.y<=icPt.y?icPt:mcPt;
+  svg.appendChild(tx('MC',topPt.x,topPt.y-14,lS));
+  svg.appendChild(tx('IC',botPt.x,botPt.y+14,lS));
+
+  // Aspect lines
+  const aspIds=['sun','moon','mercury','venus','mars'];
+  for(let a=0;a<aspIds.length;a++){
+    for(let b=a+1;b<aspIds.length;b++){
+      const diff=Math.abs(n180(data.planets[aspIds[a]].lon-data.planets[aspIds[b]].lon));
+      if([0,60,90,120,180].some(m=>Math.abs(diff-m)<8)){
+        const pa=pt(e2svg(data.planets[aspIds[a]].lon),Rcore-6);
+        const pb=pt(e2svg(data.planets[aspIds[b]].lon),Rcore-6);
+        const l=ln(pa.x,pa.y,pb.x,pb.y,'#CCCCCC',0.7);
+        l.setAttribute('opacity','0.6');svg.appendChild(l);
+      }
+    }
+  }
+
+  // Center diamond
+  const d=7;
+  svg.appendChild(ns('polygon',{points:`${cx},${cy-d} ${cx+d},${cy} ${cx},${cy+d} ${cx-d},${cy}`,fill:'#999999'}));
+
+  // ── PLANETS: placed via e2svg (natural ecliptic, preserves true arc sizes) ──
+  const pl=PLANETS.map(p=>({
+    ...p,
+    origA:e2svg(data.planets[p.id].lon),
+    ang:e2svg(data.planets[p.id].lon),
+    rx:data.planets[p.id].rx
+  }));
+  pl.sort((a,b)=>a.ang-b.ang);
+  for(let iter=0;iter<12;iter++){
+    for(let i=0;i<pl.length;i++){
+      const j=(i+1)%pl.length;
+      const diff=n180(pl[j].ang-pl[i].ang);
+      const minSep=13;
+      if(Math.abs(diff)<minSep){
+        const push=(minSep-Math.abs(diff))/2+0.4;
+        if(diff>=0){pl[i].ang=n360(pl[i].ang-push);pl[j].ang=n360(pl[j].ang+push);}
+        else{pl[i].ang=n360(pl[i].ang+push);pl[j].ang=n360(pl[j].ang-push);}
+      }
+    }
+  }
+  for(const p of pl){
+    const t1=pt(p.origA,Rm+1),t2=pt(p.origA,Rm-10);
+    svg.appendChild(ln(t1.x,t1.y,t2.x,t2.y,'#AAAAAA',0.7));
+    const gp=pt(p.ang,Rp);
+    svg.appendChild(tx(p.g,gp.x,gp.y,{sz:15,fill:'#111110',font:"'Cormorant Garamond',serif",wt:'400'}));
+    if(p.rx)svg.appendChild(tx('℞',gp.x+11,gp.y-9,{sz:9,fill:'#A03030',wt:'400'}));
+  }
+
+  // ASC label inside
+  const ascIAU=IAU[iauIdx(asc)];
+  svg.appendChild(tx(ascIAU.abbr,pt(272,Rm-16).x,pt(272,Rm-16).y,
+    {sz:10,fill:'#888888',font:"'Cormorant Garamond',serif",wt:'600'}));
+}
+
+// ── TABLE ─────────────────────────────────────────────────────────────────────
+function buildTable(data){
+  const tbody=document.getElementById('ptable');
+  tbody.innerHTML='';
+  const asc=data.asc;
+
+  const angles=[
+    {n:'ASC',lon:data.asc},
+    {n:'IC', lon:n360(data.mc+180)},
+    {n:'DSC',lon:n360(data.asc+180)},
+    {n:'MC', lon:data.mc},
+  ];
+  for(const a of angles){
+    const nu=nuastroP(a.lon),tr2=tropP(a.lon),ve=vedicP(a.lon,data.ayan);
+    const h=wheelToHouse(n360(a.lon-asc));
+    const row=document.createElement('tr');
+    row.className='tr-ang';
+    row.innerHTML=`<td><div class="td-p">${a.n}</div></td>
+      <td><span class="sn">${nu.n}</span><span class="dg">${fmtD(nu.deg)}</span></td>
+      <td><span class="hn">${h}</span></td>
+      <td><span class="sn">${tr2.n}</span><span class="dg">${fmtD(tr2.deg)}</span></td>
+      <td><span class="sn">${ve.n}</span><span class="dg">${fmtD(ve.deg)}</span></td>`;
+    tbody.appendChild(row);
+  }
+  const div=document.createElement('tr');
+  div.innerHTML=`<td colspan="5" style="padding:0;height:.5px;background:var(--border)"></td>`;
+  tbody.appendChild(div);
+
+  for(const p of PLANETS){
+    const lon=data.planets[p.id].lon,rx=data.planets[p.id].rx;
+    const nu=nuastroP(lon),tr2=tropP(lon),ve=vedicP(lon,data.ayan);
+    const h=wheelToHouse(n360(lon-asc));
+    const rxH=rx?'<span class="rx">℞</span>':'';
+    const ophS=nu.oph?'font-style:italic;':'';
+    const row=document.createElement('tr');
+    row.innerHTML=`<td><div class="td-p"><span class="pg">${p.g}</span>${p.n}</div></td>
+      <td><span class="sn" style="${ophS}">${nu.n}</span><span class="dg">${fmtD(nu.deg)}</span>${rxH}</td>
+      <td><span class="hn">${h}</span></td>
+      <td><span class="sn">${tr2.n}</span><span class="dg">${fmtD(tr2.deg)}</span>${rxH}</td>
+      <td><span class="sn">${ve.n}</span><span class="dg">${fmtD(ve.deg)}</span>${rxH}</td>`;
+    tbody.appendChild(row);
+  }
+}
+
+// ── HEIGHT REPORTING — fires once after content settles, never loops ──────────
+function reportHeight(){
+  const h=document.documentElement.scrollHeight;
+  window.parent.postMessage({type:'nuastro-height',height:h+20},'*');
+}
+// Report on initial load only
+window.addEventListener('load',reportHeight);
+// reportHeight() is also called manually after chart renders (see doCalc)
+</script>
+</body>
+</html>
